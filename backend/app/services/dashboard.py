@@ -1,12 +1,37 @@
+from datetime import UTC, datetime
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.cache import cache_get_json, cache_set_json
 from app.core.config import get_settings
-from app.models import Client, Part, ServiceOrder, ServiceOrderStatus, Vehicle
-from app.schemas.dashboard import DashboardStats
+from app.models import (
+    Client,
+    Mechanic,
+    Part,
+    ServiceOrder,
+    ServiceOrderItem,
+    ServiceOrderStatus,
+    Vehicle,
+)
+from app.schemas.dashboard import DashboardStats, MonthlyRevenue, MostUsedPart, TopMechanic
 
 CACHE_KEY = "dashboard:stats"
+MONTH_LABELS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+
+
+def _months_back(reference: datetime, count: int) -> list[datetime]:
+    """Os últimos `count` meses (o 1º dia de cada um), do mais antigo ao mais recente,
+    incluindo o mês de `reference`. Sem dependência extra: só aritmética de ano/mês."""
+    start = reference.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    result = []
+    year, month = start.year, start.month
+    for i in range(count - 1, -1, -1):
+        m = month - i
+        y = year + (m - 1) // 12
+        m = (m - 1) % 12 + 1
+        result.append(start.replace(year=y, month=m))
+    return result
 
 
 def _count_orders(*statuses: ServiceOrderStatus):
@@ -18,29 +43,58 @@ def _count_orders(*statuses: ServiceOrderStatus):
     )
 
 
-def _placeholder_sections() -> dict:
-    """Seções que já eram valores fixos no backend original (DashboardService.java).
+async def _monthly_revenue_chart(session: AsyncSession) -> list[MonthlyRevenue]:
+    """Soma o total faturado (OS finalizadas) mês a mês, para os últimos 6 meses.
+    Meses sem OS finalizada entram com valor zero em vez de sumir do gráfico."""
+    months = _months_back(datetime.now(UTC), 6)
 
-    Ficam isoladas aqui para serem substituídas por consultas reais quando o modelo de
-    faturamento estiver definido: hoje `service_orders.total_amount` nunca é preenchido
-    e não existe vínculo entre OS e peças usadas.
-    """
-    months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun"]
-    values = [8500, 9200, 7800, 11200, 9800, 13450]
-    return {
-        "monthly_revenue": 32450.0,
-        "monthly_revenue_chart": [
-            {"month": m, "amount": a} for m, a in zip(months, values, strict=True)
-        ],
-        "top_mechanics": [
-            {"mechanic_id": "1", "mechanic_name": "João Silva", "completed_orders": 45},
-            {"mechanic_id": "2", "mechanic_name": "Maria Santos", "completed_orders": 38},
-        ],
-        "most_used_parts": [
-            {"part_id": "1", "part_name": "Filtro de Óleo", "usage_count": 120},
-            {"part_id": "2", "part_name": "Pastilha de Freio", "usage_count": 85},
-        ],
-    }
+    month_key = func.to_char(ServiceOrder.completed_at, "YYYY-MM")
+    rows = await session.execute(
+        select(month_key.label("month_key"), func.sum(ServiceOrder.total_amount))
+        .where(
+            ServiceOrder.status == ServiceOrderStatus.FINALIZADA,
+            ServiceOrder.completed_at >= months[0],
+        )
+        .group_by("month_key")
+    )
+    totals_by_key = {key: float(total) for key, total in rows}
+
+    return [
+        MonthlyRevenue(
+            month=MONTH_LABELS[m.month - 1],
+            amount=totals_by_key.get(m.strftime("%Y-%m"), 0.0),
+        )
+        for m in months
+    ]
+
+
+async def _top_mechanics(session: AsyncSession, limit: int = 5) -> list[TopMechanic]:
+    rows = await session.execute(
+        select(Mechanic.id, Mechanic.name, func.count(ServiceOrder.id))
+        .join(ServiceOrder, ServiceOrder.mechanic_id == Mechanic.id)
+        .where(ServiceOrder.status == ServiceOrderStatus.FINALIZADA)
+        .group_by(Mechanic.id, Mechanic.name)
+        .order_by(func.count(ServiceOrder.id).desc())
+        .limit(limit)
+    )
+    return [
+        TopMechanic(mechanic_id=str(mid), mechanic_name=name, completed_orders=count)
+        for mid, name, count in rows
+    ]
+
+
+async def _most_used_parts(session: AsyncSession, limit: int = 5) -> list[MostUsedPart]:
+    rows = await session.execute(
+        select(Part.id, Part.name, func.sum(ServiceOrderItem.quantity))
+        .join(ServiceOrderItem, ServiceOrderItem.part_id == Part.id)
+        .group_by(Part.id, Part.name)
+        .order_by(func.sum(ServiceOrderItem.quantity).desc())
+        .limit(limit)
+    )
+    return [
+        MostUsedPart(part_id=str(pid), part_name=name, usage_count=int(count))
+        for pid, name, count in rows
+    ]
 
 
 async def get_dashboard_stats(session: AsyncSession) -> DashboardStats:
@@ -66,6 +120,12 @@ async def get_dashboard_stats(session: AsyncSession) -> DashboardStats:
         )
     ).one()
 
+    revenue_chart = await _monthly_revenue_chart(session)
+    current_month_label = MONTH_LABELS[datetime.now(UTC).month - 1]
+    monthly_revenue = next(
+        (m.amount for m in revenue_chart if m.month == current_month_label), 0.0
+    )
+
     stats = DashboardStats(
         total_clients=row[0],
         total_vehicles=row[1],
@@ -74,7 +134,10 @@ async def get_dashboard_stats(session: AsyncSession) -> DashboardStats:
         in_progress_service_orders=row[4],
         waiting_approval_service_orders=row[5],
         low_stock_items=row[6],
-        **_placeholder_sections(),
+        monthly_revenue=monthly_revenue,
+        monthly_revenue_chart=revenue_chart,
+        top_mechanics=await _top_mechanics(session),
+        most_used_parts=await _most_used_parts(session),
     )
     await cache_set_json(
         CACHE_KEY,

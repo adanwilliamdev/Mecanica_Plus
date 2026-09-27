@@ -3,7 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Identidade visual do AutoCare: grafite (estrutura), âmbar (único acento), papel (fundo),
+/* Identidade visual do Mecânica+: grafite (estrutura), âmbar (único acento), papel (fundo),
    e cores de status (musgo/ferrugem/aço) separadas do acento. */
 @theme {
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;

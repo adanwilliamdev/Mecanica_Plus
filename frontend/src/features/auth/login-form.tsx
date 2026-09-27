@@ -61,7 +61,7 @@ export function LoginForm() {
         <div className="relative px-12 pt-14">
           <div className="flex items-center gap-2.5">
             <BrandMark className="text-amber-400" />
-            <span className="font-display text-lg font-semibold tracking-tight">AutoCare</span>
+            <span className="font-display text-lg font-semibold tracking-tight">Mecânica+</span>
           </div>
         </div>
         <div className="relative px-12 pb-16">
@@ -79,7 +79,7 @@ export function LoginForm() {
         <div className="w-full max-w-sm">
           <div className="mb-10 flex items-center gap-2.5 lg:hidden">
             <BrandMark className="text-amber-500" />
-            <span className="font-display text-lg font-semibold text-graphite-900">AutoCare</span>
+            <span className="font-display text-lg font-semibold text-graphite-900">Mecânica+</span>
           </div>
 
           <h2 className="font-display text-2xl font-semibold text-graphite-900">Entrar</h2>

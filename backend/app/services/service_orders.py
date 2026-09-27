@@ -1,16 +1,26 @@
 import uuid
 from datetime import UTC, datetime
+from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import BusinessError, ForbiddenError, NotFoundError
-from app.models import Role, ServiceOrder, ServiceOrderStatus, User, service_order_number_seq
+from app.models import (
+    Role,
+    ServiceOrder,
+    ServiceOrderItem,
+    ServiceOrderStatus,
+    User,
+    service_order_number_seq,
+)
 from app.schemas.service_order import (
     ServiceOrderRequest,
     ServiceOrderResponse,
     StatusUpdateRequest,
 )
+from app.schemas.service_order_item import ServiceOrderItemRequest
+from app.services import inventory as inventory_service
 from app.services.clients import get_client
 from app.services.mechanics import get_mechanic, get_mechanic_by_user_id
 from app.services.vehicles import get_vehicle
@@ -51,6 +61,20 @@ def _validate_transition(current: ServiceOrderStatus, new: ServiceOrderStatus) -
         return
     if new not in VALID_TRANSITIONS[current]:
         raise BusinessError(f"Transição de status inválida de {current} para {new}")
+
+
+def _assert_editable(order: ServiceOrder) -> None:
+    """Peças e mão de obra só podem ser lançadas enquanto a OS ainda está em andamento:
+    depois de finalizada ou cancelada o faturamento fica congelado."""
+    if order.status in (ServiceOrderStatus.FINALIZADA, ServiceOrderStatus.CANCELADA):
+        raise BusinessError(
+            "Não é possível alterar peças ou mão de obra de uma OS finalizada ou cancelada"
+        )
+
+
+def _recalculate_total(order: ServiceOrder) -> None:
+    parts_total = sum((item.subtotal for item in order.items), Decimal("0"))
+    order.total_amount = order.labor_amount + parts_total
 
 
 async def _next_order_number(session: AsyncSession) -> str:
@@ -151,3 +175,82 @@ async def list_by_status(
     session: AsyncSession, status: ServiceOrderStatus
 ) -> list[ServiceOrderResponse]:
     return await _list(session, ServiceOrder.status == status)
+
+
+async def add_item(
+    session: AsyncSession, order_id: uuid.UUID, data: ServiceOrderItemRequest, user: User
+) -> ServiceOrderResponse:
+    """Registra o uso de uma peça na OS: baixa o estoque (preço travado no momento do
+    uso) e recalcula o total faturado. A baixa de estoque já valida disponibilidade."""
+    order = await get_service_order(session, order_id)
+    await _assert_can_access(session, order, user)
+    _assert_editable(order)
+
+    part = await inventory_service.get_part(session, data.part_id)
+    await inventory_service.remove_stock(
+        session,
+        part.id,
+        data.quantity,
+        f"Uso na OS {order.order_number}",
+        user.id,
+        reference_id=order.order_number,
+    )
+
+    session.add(
+        ServiceOrderItem(
+            service_order_id=order.id,
+            part_id=part.id,
+            quantity=data.quantity,
+            unit_price=part.sale_price,
+        )
+    )
+    await session.flush()
+    await session.refresh(order, attribute_names=["items"])
+    _recalculate_total(order)
+    await session.commit()
+    await session.refresh(order)
+    return ServiceOrderResponse.from_model(order)
+
+
+async def remove_item(
+    session: AsyncSession, order_id: uuid.UUID, item_id: uuid.UUID, user: User
+) -> ServiceOrderResponse:
+    """Remove uma peça lançada na OS e estorna a quantidade ao estoque."""
+    order = await get_service_order(session, order_id)
+    await _assert_can_access(session, order, user)
+    _assert_editable(order)
+
+    item = next((i for i in order.items if i.id == item_id), None)
+    if item is None:
+        raise NotFoundError(f"Item não encontrado na OS com ID: {item_id}")
+
+    await inventory_service.add_stock(
+        session,
+        item.part_id,
+        item.quantity,
+        f"Estorno da OS {order.order_number}",
+        user.id,
+        reference_id=order.order_number,
+    )
+
+    await session.delete(item)
+    await session.flush()
+    await session.refresh(order, attribute_names=["items"])
+    _recalculate_total(order)
+    await session.commit()
+    await session.refresh(order)
+    return ServiceOrderResponse.from_model(order)
+
+
+async def update_labor_amount(
+    session: AsyncSession, order_id: uuid.UUID, labor_amount: Decimal, user: User
+) -> ServiceOrderResponse:
+    order = await get_service_order(session, order_id)
+    await _assert_can_access(session, order, user)
+    _assert_editable(order)
+
+    order.labor_amount = labor_amount
+    _recalculate_total(order)
+    await session.commit()
+    await session.refresh(order)
+    return ServiceOrderResponse.from_model(order)

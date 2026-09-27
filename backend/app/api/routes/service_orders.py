@@ -10,22 +10,26 @@ from app.schemas.service_order import (
     ServiceOrderResponse,
     StatusUpdateRequest,
 )
+from app.schemas.service_order_item import LaborAmountRequest, ServiceOrderItemRequest
 from app.services import service_orders as service
 
 router = APIRouter(prefix="/service-orders", tags=["Ordens de serviço"])
 
-# MECHANIC só é liberado em GET /{id} e PATCH /{id}/status; a restrição "somente a OS
-# atribuída a ele" é aplicada em services.service_orders._assert_can_access, porque o
-# controle por papel sozinho não sabe qual mecânico está por trás do ID da URL.
+# MECHANIC só é liberado em GET /{id}, PATCH /{id}/status e nos itens/mão de obra; a
+# restrição "somente a OS atribuída a ele" é aplicada em
+# services.service_orders._assert_can_access, porque o controle por papel sozinho não
+# sabe qual mecânico está por trás do ID da URL.
 staff = require_roles(Role.ADMIN, Role.MANAGER, Role.RECEPTIONIST)
 creators = require_roles(Role.ADMIN, Role.RECEPTIONIST)
 viewers = require_roles(Role.ADMIN, Role.MANAGER, Role.RECEPTIONIST, Role.MECHANIC)
 status_updaters = require_roles(Role.ADMIN, Role.MANAGER, Role.MECHANIC)
 mechanics_only = require_roles(Role.MECHANIC)
+billing_editors = require_roles(Role.ADMIN, Role.MANAGER, Role.RECEPTIONIST, Role.MECHANIC)
 
 ViewerUser = Annotated[User, viewers]
 StatusUser = Annotated[User, status_updaters]
 MechanicUser = Annotated[User, mechanics_only]
+BillingUser = Annotated[User, billing_editors]
 
 
 @router.post(
@@ -88,3 +92,28 @@ async def assign_mechanic(
     session: SessionDep,
 ):
     return await service.assign_mechanic(session, order_id, mechanic_id)
+
+
+@router.post(
+    "/{order_id}/items", response_model=ServiceOrderResponse, status_code=status.HTTP_201_CREATED
+)
+async def add_item(
+    order_id: uuid.UUID, data: ServiceOrderItemRequest, session: SessionDep, user: BillingUser
+):
+    """Registra o uso de uma peça na OS: baixa o estoque e soma ao total faturado."""
+    return await service.add_item(session, order_id, data, user)
+
+
+@router.delete("/{order_id}/items/{item_id}", response_model=ServiceOrderResponse)
+async def remove_item(
+    order_id: uuid.UUID, item_id: uuid.UUID, session: SessionDep, user: BillingUser
+):
+    """Remove uma peça lançada na OS e estorna a quantidade ao estoque."""
+    return await service.remove_item(session, order_id, item_id, user)
+
+
+@router.patch("/{order_id}/labor", response_model=ServiceOrderResponse)
+async def update_labor_amount(
+    order_id: uuid.UUID, data: LaborAmountRequest, session: SessionDep, user: BillingUser
+):
+    return await service.update_labor_amount(session, order_id, data.labor_amount, user)

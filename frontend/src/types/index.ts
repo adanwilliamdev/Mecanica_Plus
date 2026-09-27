@@ -120,6 +120,17 @@ export type ServiceOrderStatus =
   | "FINALIZADA"
   | "CANCELADA"
 
+export interface ServiceOrderItem {
+  id: string
+  partId: string
+  partName: string
+  partCode: string
+  quantity: number
+  unitPrice: number
+  subtotal: number
+  createdAt: string
+}
+
 export interface ServiceOrder {
   id: string
   orderNumber: string
@@ -132,7 +143,10 @@ export interface ServiceOrder {
   reportedProblem: string | null
   diagnosis: string | null
   status: ServiceOrderStatus
+  laborAmount: number
+  partsAmount: number
   totalAmount: number
+  items: ServiceOrderItem[]
   startedAt: string | null
   completedAt: string | null
   createdAt: string
@@ -143,6 +157,11 @@ export interface ServiceOrderRequest {
   vehicleId: string
   mechanicId: string | null
   reportedProblem: string | null
+}
+
+export interface ServiceOrderItemRequest {
+  partId: string
+  quantity: number
 }
 
 export interface StatusUpdateRequest {

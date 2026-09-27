@@ -5,25 +5,25 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: autocare-postgres
+    container_name: mecanica-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: autocare
+      POSTGRES_DB: mecanica
     ports:
       - "5432:5432"
     volumes:
-      - autocare_pg_data:/var/lib/postgresql/data
+      - mecanica_pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d autocare"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mecanica"]
       interval: 5s
       timeout: 5s
       retries: 10
 
   redis:
     image: redis:7-alpine
-    container_name: autocare-redis
+    container_name: mecanica-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -35,7 +35,7 @@ services:
 
   api:
     build: ./backend
-    container_name: autocare-api
+    container_name: mecanica-api
     restart: unless-stopped
     depends_on:
       postgres:
@@ -43,7 +43,7 @@ services:
       redis:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/autocare
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/mecanica
       REDIS_URL: redis://redis:6379/0
       JWT_SECRET: ${JWT_SECRET:-troque-este-segredo-em-producao-para-uma-string-longa-e-aleatoria}
       CORS_ALLOWED_ORIGINS: http://localhost:3000
@@ -55,7 +55,7 @@ services:
       context: ./frontend
       args:
         NEXT_PUBLIC_API_URL: http://localhost:8080/api
-    container_name: autocare-web
+    container_name: mecanica-web
     restart: unless-stopped
     depends_on:
       - api
@@ -63,4 +63,4 @@ services:
       - "3000:3000"
 
 volumes:
-  autocare_pg_data:
+  mecanica_pg_data:

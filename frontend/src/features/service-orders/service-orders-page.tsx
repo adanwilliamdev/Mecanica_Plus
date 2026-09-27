@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { useHasRole } from "@/features/auth/auth-provider"
 import { useServiceOrders, useUpdateServiceOrderStatus } from "@/features/service-orders/queries"
+import { ServiceOrderBillingDialog } from "@/features/service-orders/service-order-billing-dialog"
 import { ServiceOrderForm } from "@/features/service-orders/service-order-form"
 import { StatusBadge } from "@/features/service-orders/status-badge"
 import { isTerminal, nextStatus, STATUS_LABELS } from "@/features/service-orders/status"
@@ -35,17 +36,24 @@ export function ServiceOrdersPage() {
 
   const [creating, setCreating] = useState(false)
   const [toCancel, setToCancel] = useState<ServiceOrder | null>(null)
+  const [billing, setBilling] = useState<ServiceOrder | null>(null)
 
   const actions: RowAction<ServiceOrder>[] = [
+    { label: "Faturamento", onSelect: setBilling },
     {
       label: "Avançar status",
       onSelect: (order) => {
         const next = nextStatus(order.status)
         if (next) updateStatus.mutate({ id: order.id, status: next })
       },
-      hidden: (order) => !nextStatus(order.status) || isTerminal(order.status),
+      hidden: (order) => !canChangeStatus || !nextStatus(order.status) || isTerminal(order.status),
     },
-    { label: "Cancelar OS", onSelect: setToCancel, destructive: true, hidden: (o) => isTerminal(o.status) },
+    {
+      label: "Cancelar OS",
+      onSelect: setToCancel,
+      destructive: true,
+      hidden: (o) => !canChangeStatus || isTerminal(o.status),
+    },
   ]
 
   return (
@@ -67,9 +75,10 @@ export function ServiceOrdersPage() {
         isLoading={isLoading}
         errorMessage={error ? "Erro ao carregar ordens de serviço" : null}
         emptyMessage={isMechanic ? "Nenhuma ordem de serviço atribuída a você" : undefined}
-        actions={canChangeStatus ? actions : undefined}
+        actions={actions}
       />
       <ServiceOrderForm open={creating} onClose={() => setCreating(false)} />
+      <ServiceOrderBillingDialog order={billing} onClose={() => setBilling(null)} />
       <ConfirmDialog
         open={!!toCancel}
         onOpenChange={(open) => !open && setToCancel(null)}

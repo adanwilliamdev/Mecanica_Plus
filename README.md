@@ -1,4 +1,4 @@
-# 🚗 AutoCare
+# 🔧 Mecânica+
 
 ### Sistema de gestão para oficinas mecânicas
 
@@ -101,7 +101,7 @@ Plataforma web para gerenciamento de **clientes, veículos, mecânicos, estoque,
 ## 📁 Estrutura
 
 ```text
-autocare/
+mecanica-plus/
 ├── backend/
 │   ├── app/
 │   │   ├── api/
@@ -302,7 +302,7 @@ A variável `TEST_DATABASE_URL` define o banco utilizado pelos testes.
 Exemplo:
 
 ```text
-postgresql+asyncpg://postgres:postgres@localhost:5432/autocare_test
+postgresql+asyncpg://postgres:postgres@localhost:5432/mecanica_test
 ```
 
 As migrations do Alembic são aplicadas automaticamente durante a execução dos testes.
@@ -312,7 +312,7 @@ As migrations do Alembic são aplicadas automaticamente durante a execução dos
 O seed cria um usuário administrador para desenvolvimento:
 
 ```text
-E-mail: admin@autocare.com
+E-mail: admin@mecanicaplus.com
 Senha: admin123
 ```
 

@@ -4,6 +4,7 @@ from app.models.enums import BudgetStatus, MovementType, Role, ServiceOrderStatu
 from app.models.mechanic import Mechanic
 from app.models.part import InventoryMovement, Part
 from app.models.service_order import ServiceOrder, service_order_number_seq
+from app.models.service_order_item import ServiceOrderItem
 from app.models.user import RefreshToken, User
 from app.models.vehicle import Vehicle
 
@@ -18,6 +19,7 @@ __all__ = [
     "RefreshToken",
     "Role",
     "ServiceOrder",
+    "ServiceOrderItem",
     "ServiceOrderStatus",
     "User",
     "Vehicle",

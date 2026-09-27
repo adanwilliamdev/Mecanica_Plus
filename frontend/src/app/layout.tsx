@@ -6,7 +6,7 @@ import "./globals.css"
 import Providers from "./providers"
 
 export const metadata: Metadata = {
-  title: "AutoCare",
+  title: "Mecânica+",
   description: "Sistema de gestão para oficinas mecânicas",
 }
 

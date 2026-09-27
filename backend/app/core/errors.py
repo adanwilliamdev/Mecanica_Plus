@@ -10,7 +10,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.exceptions import AppError
 
-logger = logging.getLogger("autocare.errors")
+logger = logging.getLogger("mecanica.errors")
 
 _INTEGRITY_MESSAGE = (
     "Operação viola uma restrição de integridade dos dados "

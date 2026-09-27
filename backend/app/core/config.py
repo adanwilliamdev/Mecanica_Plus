@@ -11,7 +11,7 @@ class Settings(BaseSettings):
 
     environment: str = "development"
 
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/autocare"
+    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/mecanica"
     redis_url: str = "redis://localhost:6379/0"
 
     jwt_secret: str = PLACEHOLDER_JWT_SECRET
@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     login_rate_limit_window_seconds: int = 60
     dashboard_cache_ttl_seconds: int = 30
 
-    seed_admin_email: str = "admin@autocare.com"
+    seed_admin_email: str = "admin@mecanicaplus.com"
     seed_admin_password: str = "admin123"
 
     @model_validator(mode="after")

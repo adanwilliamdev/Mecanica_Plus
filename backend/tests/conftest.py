@@ -3,8 +3,8 @@
 Os testes rodam contra um PostgreSQL real (o banco de testes é migrado com o Alembic,
 então as migrations também são exercitadas) e um Redis em memória (fakeredis).
 
-    createdb autocare_test
-    TEST_DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/autocare_test pytest
+    createdb mecanica_test
+    TEST_DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/mecanica_test pytest
 """
 
 import os
@@ -15,7 +15,7 @@ from pathlib import Path
 
 # As variáveis precisam ser definidas ANTES de importar a aplicação.
 TEST_DATABASE_URL = os.environ.get(
-    "TEST_DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/autocare_test"
+    "TEST_DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/mecanica_test"
 )
 os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 os.environ["ENVIRONMENT"] = "test"
@@ -54,8 +54,9 @@ async def _clean_state():
     async with engine.begin() as conn:
         await conn.execute(
             text(
-                "TRUNCATE inventory_movements, budgets, service_orders, mechanics, vehicles, "
-                "clients, parts, refresh_tokens, users RESTART IDENTITY CASCADE"
+                "TRUNCATE inventory_movements, budgets, service_order_items, service_orders, "
+                "mechanics, vehicles, clients, parts, refresh_tokens, users "
+                "RESTART IDENTITY CASCADE"
             )
         )
         await conn.execute(text("ALTER SEQUENCE service_order_number_seq RESTART"))

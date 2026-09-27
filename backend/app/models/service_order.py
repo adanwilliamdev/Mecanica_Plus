@@ -10,6 +10,7 @@ from app.models.client import Client
 from app.models.enums import ServiceOrderStatus
 from app.models.mechanic import Mechanic
 from app.models.mixins import Timestamps, UUIDPrimaryKey
+from app.models.service_order_item import ServiceOrderItem
 from app.models.vehicle import Vehicle
 
 # Números de OS e orçamento vêm de sequences nativas do Postgres: atômicas sob concorrência.
@@ -38,6 +39,11 @@ class ServiceOrder(UUIDPrimaryKey, Timestamps, Base):
         index=True,
         nullable=False,
     )
+    # Mão de obra: valor lançado manualmente pela oficina, somado ao total das peças
+    # para compor `total_amount`. Ambos são recalculados em app.services.service_orders.
+    labor_amount: Mapped[Decimal] = mapped_column(
+        Numeric(12, 2), default=Decimal("0"), server_default=text("0"), nullable=False
+    )
     total_amount: Mapped[Decimal] = mapped_column(
         Numeric(12, 2), default=Decimal("0"), server_default=text("0"), nullable=False
     )
@@ -47,3 +53,6 @@ class ServiceOrder(UUIDPrimaryKey, Timestamps, Base):
     client: Mapped[Client] = relationship(lazy="joined")
     vehicle: Mapped[Vehicle] = relationship(lazy="joined")
     mechanic: Mapped[Mechanic | None] = relationship(lazy="joined")
+    items: Mapped[list[ServiceOrderItem]] = relationship(
+        lazy="selectin", order_by=ServiceOrderItem.created_at, cascade="all, delete-orphan"
+    )

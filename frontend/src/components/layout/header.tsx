@@ -46,11 +46,11 @@ export function Header() {
             </Button>
             <SheetContent>
               <SheetTitle>Menu</SheetTitle>
-              <SheetDescription>Navegação principal do AutoCare</SheetDescription>
+              <SheetDescription>Navegação principal do Mecânica+</SheetDescription>
               <SidebarContent onNavigate={() => setMenuOpen(false)} />
             </SheetContent>
           </Sheet>
-          <p className="text-sm font-medium text-graphite-500">{findNavItem(pathname)?.label ?? "AutoCare"}</p>
+          <p className="text-sm font-medium text-graphite-500">{findNavItem(pathname)?.label ?? "Mecânica+"}</p>
         </div>
 
         <div className="flex items-center gap-3 sm:gap-4">

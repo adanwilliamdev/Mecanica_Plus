@@ -21,7 +21,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(
-        title="AutoCare API",
+        title="Mecânica+ API",
         description="API para gestão de oficinas mecânicas",
         version="2.0.0",
         docs_url="/api/swagger-ui",

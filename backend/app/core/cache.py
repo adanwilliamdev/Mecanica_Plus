@@ -13,7 +13,7 @@ from redis.exceptions import RedisError
 
 from app.core.config import get_settings
 
-logger = logging.getLogger("autocare.cache")
+logger = logging.getLogger("mecanica.cache")
 
 _redis: Redis | None = None
 

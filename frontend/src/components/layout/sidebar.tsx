@@ -20,7 +20,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <div className="px-6 pt-7 pb-6">
         <div className="flex items-center gap-2.5">
           <BrandMark className="size-[22px] text-amber-400" />
-          <span className="font-display text-lg font-semibold tracking-tight text-white">AutoCare</span>
+          <span className="font-display text-lg font-semibold tracking-tight text-white">Mecânica+</span>
         </div>
         <p className="mt-1 pl-[30px] text-xs text-graphite-400">Sistema de gestão</p>
       </div>

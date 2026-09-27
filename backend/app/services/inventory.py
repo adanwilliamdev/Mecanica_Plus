@@ -94,6 +94,7 @@ async def _apply_movement(
     reason: str | None,
     user_id: uuid.UUID,
     movement_type: MovementType,
+    reference_id: str | None = None,
 ) -> None:
     part = await get_part(session, part_id)
     new_quantity = part.stock_quantity + delta
@@ -120,6 +121,7 @@ async def _apply_movement(
             previous_quantity=part.stock_quantity,
             current_quantity=new_quantity,
             reason=reason,
+            reference_id=reference_id,
             user_id=user_id,
         )
     )
@@ -127,19 +129,33 @@ async def _apply_movement(
 
 
 async def add_stock(
-    session: AsyncSession, part_id: uuid.UUID, quantity: int, reason: str | None, user_id: uuid.UUID
+    session: AsyncSession,
+    part_id: uuid.UUID,
+    quantity: int,
+    reason: str | None,
+    user_id: uuid.UUID,
+    reference_id: str | None = None,
 ) -> None:
     if quantity <= 0:
         raise BusinessError("Quantidade deve ser positiva")
-    await _apply_movement(session, part_id, quantity, reason, user_id, MovementType.ENTRADA)
+    await _apply_movement(
+        session, part_id, quantity, reason, user_id, MovementType.ENTRADA, reference_id
+    )
 
 
 async def remove_stock(
-    session: AsyncSession, part_id: uuid.UUID, quantity: int, reason: str | None, user_id: uuid.UUID
+    session: AsyncSession,
+    part_id: uuid.UUID,
+    quantity: int,
+    reason: str | None,
+    user_id: uuid.UUID,
+    reference_id: str | None = None,
 ) -> None:
     if quantity <= 0:
         raise BusinessError("Quantidade deve ser positiva")
-    await _apply_movement(session, part_id, -quantity, reason, user_id, MovementType.SAIDA)
+    await _apply_movement(
+        session, part_id, -quantity, reason, user_id, MovementType.SAIDA, reference_id
+    )
 
 
 async def list_movements(session: AsyncSession, part_id: uuid.UUID) -> list[MovementResponse]:
