@@ -3,61 +3,113 @@
       th:replace="~{layout :: layout('Dashboard', ~{::main})}">
 <body>
 <main class="space">
-  <div class="page-header">
-    <div>
-      <h1>Dashboard</h1>
-      <p>Visão geral da sua oficina</p>
-    </div>
-  </div>
-
-  <div class="grid cols-3">
-    <div class="card tile"><div><div class="val" th:text="${stats.totalClients()}">0</div><div class="lbl">Clientes</div></div></div>
-    <div class="card tile"><div><div class="val" th:text="${stats.totalVehicles()}">0</div><div class="lbl">Veículos</div></div></div>
-    <div class="card tile"><div><div class="val" th:text="${stats.openServiceOrders()}">0</div><div class="lbl">Ordens abertas</div></div></div>
-  </div>
-
-  <div class="card tile warn" th:if="${stats.lowStockItems() > 0}">
-    <div><div class="val" th:text="${stats.lowStockItems()}">0</div><div class="lbl">Itens com estoque baixo</div></div>
-  </div>
-
-  <div class="grid cols-2">
-    <div class="card pad">
-      <div class="muted" style="font-weight:500">Faturamento mensal</div>
-      <div class="big-number" th:text="${@fmt.currency(stats.monthlyRevenue())}">R$ 0,00</div>
-      <div class="chart" role="img" aria-label="Faturamento dos últimos 6 meses">
-        <div class="col" th:each="bar : ${bars}">
-          <small th:text="${@fmt.currency(bar.amount())}">R$ 0,00</small>
-          <div class="bar" th:style="'height:' + ${bar.percent()} + '%'" th:title="${bar.label() + ': ' + @fmt.currency(bar.amount())}"></div>
-          <span th:text="${bar.label()}">Jan</span>
+    <div class="page-header">
+        <div>
+            <h1>Dashboard</h1>
+            <p>Visão geral da sua oficina</p>
         </div>
-      </div>
     </div>
 
-    <div class="space">
-      <div class="card pad">
-        <h3 class="section-title">Mecânicos mais ativos</h3>
-        <p class="muted" th:if="${#lists.isEmpty(stats.topMechanics())}">Sem ordens finalizadas ainda.</p>
-        <ol class="rank" th:unless="${#lists.isEmpty(stats.topMechanics())}">
-          <li th:each="m, it : ${stats.topMechanics()}">
-            <span class="pos" th:text="${it.count}">1</span>
-            <span class="name" th:text="${m.mechanicName()}">Nome</span>
-            <span class="cnt" th:text="${m.completedOrders() + ' OS'}">0 OS</span>
-          </li>
-        </ol>
-      </div>
-      <div class="card pad">
-        <h3 class="section-title">Peças mais usadas</h3>
-        <p class="muted" th:if="${#lists.isEmpty(stats.mostUsedParts())}">Nenhuma peça utilizada ainda.</p>
-        <ol class="rank" th:unless="${#lists.isEmpty(stats.mostUsedParts())}">
-          <li th:each="p, it : ${stats.mostUsedParts()}">
-            <span class="pos" th:text="${it.count}">1</span>
-            <span class="name" th:text="${p.partName()}">Peça</span>
-            <span class="cnt" th:text="${p.usageCount() + ' un.'}">0 un.</span>
-          </li>
-        </ol>
-      </div>
+    <div class="grid cols-3">
+        <div class="card stat">
+            <div class="stat-icon blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+            </div>
+            <div class="stat-body">
+                <div class="stat-label">Clientes</div>
+                <div class="stat-value" th:text="${stats.totalClients()}">0</div>
+            </div>
+        </div>
+
+        <div class="card stat">
+            <div class="stat-icon green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/>
+                    <path d="M15 18H9"/>
+                    <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/>
+                    <circle cx="17" cy="18" r="2"/>
+                    <circle cx="7" cy="18" r="2"/>
+                </svg>
+            </div>
+            <div class="stat-body">
+                <div class="stat-label">Veículos</div>
+                <div class="stat-value" th:text="${stats.totalVehicles()}">0</div>
+            </div>
+        </div>
+
+        <div class="card stat">
+            <div class="stat-icon amber">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="8" y="2" width="8" height="4" rx="1"/>
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                    <path d="M12 11h4"/><path d="M12 16h4"/>
+                    <path d="M8 11h.01"/><path d="M8 16h.01"/>
+                </svg>
+            </div>
+            <div class="stat-body">
+                <div class="stat-label">Ordens abertas</div>
+                <div class="stat-value" th:text="${stats.openServiceOrders()}">0</div>
+            </div>
+        </div>
     </div>
-  </div>
+
+    <div class="card stat" th:if="${stats.lowStockItems() > 0}">
+        <div class="stat-icon red">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 9v4"/><path d="M12 17h.01"/>
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            </svg>
+        </div>
+        <div class="stat-body">
+            <div class="stat-label">Itens com estoque baixo</div>
+            <div class="stat-value" th:text="${stats.lowStockItems()}">0</div>
+        </div>
+    </div>
+
+    <div class="grid cols-2">
+        <div class="card pad">
+            <div class="muted" style="font-weight:500">Faturamento mensal</div>
+            <div class="big-number" th:text="${@fmt.currency(stats.monthlyRevenue())}">R$ 0,00</div>
+            <div class="chart" role="img" aria-label="Faturamento dos últimos 6 meses">
+                <div class="col" th:each="bar : ${bars}">
+                    <small th:text="${@fmt.currency(bar.amount())}">R$ 0,00</small>
+                    <div class="bar" th:style="'height:' + ${bar.percent()} + '%'"
+                         th:title="${bar.label() + ': ' + @fmt.currency(bar.amount())}"></div>
+                    <span th:text="${bar.label()}">Jan</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="space">
+            <div class="card pad">
+                <h3 class="section-title">Mecânicos mais ativos</h3>
+                <p class="muted" th:if="${#lists.isEmpty(stats.topMechanics())}">Sem ordens finalizadas ainda.</p>
+                <ol class="rank" th:unless="${#lists.isEmpty(stats.topMechanics())}">
+                    <li th:each="m, it : ${stats.topMechanics()}">
+                        <span class="pos" th:text="${it.count}">1</span>
+                        <span class="name" th:text="${m.mechanicName()}">Nome</span>
+                        <span class="cnt" th:text="${m.completedOrders() + ' OS'}">0 OS</span>
+                    </li>
+                </ol>
+            </div>
+            <div class="card pad">
+                <h3 class="section-title">Peças mais usadas</h3>
+                <p class="muted" th:if="${#lists.isEmpty(stats.mostUsedParts())}">Nenhuma peça utilizada ainda.</p>
+                <ol class="rank" th:unless="${#lists.isEmpty(stats.mostUsedParts())}">
+                    <li th:each="p, it : ${stats.mostUsedParts()}">
+                        <span class="pos" th:text="${it.count}">1</span>
+                        <span class="name" th:text="${p.partName()}">Peça</span>
+                        <span class="cnt" th:text="${p.usageCount() + ' un.'}">0 un.</span>
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </div>
 </main>
 </body>
 </html>

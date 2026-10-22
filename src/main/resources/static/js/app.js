@@ -17,13 +17,36 @@
     });
   }
 
-  // Filtra as opções de veículo pelo cliente escolhido:
-  // <select id="clientId"> + <select data-vehicle-select> com <option data-client="...">.
+  // ---- Dropdown de ações por linha (⋮) ----
+  document.querySelectorAll('.row-menu').forEach(function (menu) {
+    var btn = menu.querySelector('.menu-btn');
+    if (!btn) return;
+    btn.addEventListener('click', function (event) {
+      event.stopPropagation();
+      document.querySelectorAll('.row-menu.open').forEach(function (other) {
+        if (other !== menu) other.classList.remove('open');
+      });
+      menu.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', function () {
+    document.querySelectorAll('.row-menu.open').forEach(function (menu) {
+      menu.classList.remove('open');
+    });
+  });
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') {
+      document.querySelectorAll('.row-menu.open').forEach(function (menu) {
+        menu.classList.remove('open');
+      });
+    }
+  });
+
+  // ---- Filtra veículos pelo cliente escolhido ----
   var client = document.getElementById('clientId');
   var vehicle = document.querySelector('[data-vehicle-select]');
   if (client && vehicle) {
     var options = Array.prototype.slice.call(vehicle.querySelectorAll('option[data-client]'));
-
     var apply = function (reset) {
       var selected = client.value;
       options.forEach(function (option) {
@@ -32,13 +55,33 @@
         option.disabled = !visible;
       });
       var current = vehicle.options[vehicle.selectedIndex];
-      if (reset || !current || current.disabled) {
-        vehicle.value = '';
-      }
+      if (reset || !current || current.disabled) vehicle.value = '';
       vehicle.disabled = selected === '';
     };
-
     client.addEventListener('change', function () { apply(true); });
     apply(false);
   }
+
+  // ---- Busca + filtro em tabelas com [data-table] ----
+  document.querySelectorAll('table[data-table]').forEach(function (table) {
+    var name = table.getAttribute('data-table');
+    var searchInput = document.querySelector('[data-search-table="' + name + '"]');
+    var filterSelect = document.querySelector('[data-filter-table="' + name + '"]');
+    if (!searchInput && !filterSelect) return;
+
+    function apply() {
+      var q = searchInput ? searchInput.value.toLowerCase().trim() : '';
+      var f = filterSelect ? filterSelect.value : '';
+      table.querySelectorAll('tbody tr').forEach(function (tr) {
+        if (tr.querySelector('td.empty')) return;
+        var textMatch = !q || tr.textContent.toLowerCase().indexOf(q) !== -1;
+        var rowFilter = tr.getAttribute('data-filter') || '';
+        var filterMatch = !f || rowFilter === f;
+        tr.style.display = (textMatch && filterMatch) ? '' : 'none';
+      });
+    }
+
+    if (searchInput) searchInput.addEventListener('input', apply);
+    if (filterSelect) filterSelect.addEventListener('change', apply);
+  });
 })();

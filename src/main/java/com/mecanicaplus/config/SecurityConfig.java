@@ -22,7 +22,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
@@ -32,6 +31,14 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  *   <li>demais rotas (interface web): sessão + formulário de login + CSRF.</li>
  * </ul>
  * O controle por papel é feito com {@code @PreAuthorize} nos controllers (ver {@code Access}).
+ *
+ * <p><strong>Nota sobre CORS:</strong> o bean {@link #corsConfigurationSource(AppProperties)}
+ * declara o tipo concreto {@link UrlBasedCorsConfigurationSource} (e não a interface
+ * {@code CorsConfigurationSource}) de propósito. O Spring MVC registra automaticamente um
+ * {@code mvcHandlerMappingIntrospector}, que também implementa {@code CorsConfigurationSource};
+ * se o parâmetro aqui fosse a interface, o Spring encontraria <em>dois</em> beans candidatos e
+ * falharia na inicialização. Tipar pelo concreto elimina a ambiguidade, pois o introspector do
+ * MVC não é um {@code UrlBasedCorsConfigurationSource}.
  */
 @Configuration
 @EnableMethodSecurity
@@ -42,8 +49,13 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder(10);
     }
 
+    /**
+     * Fonte de CORS para a API. Retorna o tipo concreto {@link UrlBasedCorsConfigurationSource}
+     * para evitar conflito com o {@code mvcHandlerMappingIntrospector} do Spring MVC, que também
+     * implementa a interface {@code CorsConfigurationSource}.
+     */
     @Bean
-    CorsConfigurationSource corsConfigurationSource(AppProperties props) {
+    UrlBasedCorsConfigurationSource corsConfigurationSource(AppProperties props) {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(props.corsOrigins());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
@@ -61,10 +73,12 @@ public class SecurityConfig {
             JwtService jwtService,
             UserRepository users,
             ApiErrorWriter errorWriter,
-            CorsConfigurationSource cors)
+            UrlBasedCorsConfigurationSource cors)
             throws Exception {
         http.securityMatcher("/api/**")
                 .csrf(AbstractHttpConfigurer::disable)
+                // UrlBasedCorsConfigurationSource é um CorsConfigurationSource: aceito pelo
+                // configurationSource(...) sem conversão explícita.
                 .cors(c -> c.configurationSource(cors))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a

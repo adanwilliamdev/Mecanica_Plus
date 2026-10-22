@@ -4,50 +4,81 @@
       th:replace="~{layout :: layout('Ordens de serviço', ~{::main})}">
 <body>
 <main>
-  <div class="page-header">
-    <div>
-      <h1>Ordens de Serviço</h1>
-      <p>Acompanhe o ciclo de atendimento da oficina</p>
+    <div class="page-header">
+        <div>
+            <h1>Ordens de Serviço</h1>
+            <p>Acompanhe o ciclo de atendimento da oficina</p>
+        </div>
+        <a class="btn" th:href="@{/service-orders/new}" sec:authorize="hasAnyRole('ADMIN','RECEPTIONIST')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Nova Ordem
+        </a>
     </div>
-    <a class="btn" th:href="@{/service-orders/new}" sec:authorize="hasAnyRole('ADMIN','RECEPTIONIST')">+ Nova Ordem</a>
-  </div>
-  <div class="card table-wrap">
-    <table>
-      <thead>
-        <tr><th>Número</th><th>Cliente</th><th>Veículo</th><th>Mecânico</th><th>Status</th><th class="num">Valor</th><th></th></tr>
-      </thead>
-      <tbody>
-        <tr th:each="o : ${orders}">
-          <td class="mono strong" th:text="${o.orderNumber()}">OS2026000001</td>
-          <td th:text="${o.clientName()}">Cliente</td>
-          <td th:text="${o.vehicleInfo()}">Veículo</td>
-          <td th:text="${@fmt.dash(o.mechanicName())}">—</td>
-          <td><span class="badge" th:classappend="${@fmt.orderTone(o.status())}" th:text="${o.status().label}">Criada</span></td>
-          <td class="num mono" th:text="${@fmt.currency(o.totalAmount())}">R$ 0,00</td>
-          <td>
-            <div class="actions">
-              <a class="btn link" th:href="@{/service-orders/{id}/billing(id=${o.id()})}">Faturamento</a>
-              <th:block sec:authorize="hasAnyRole('ADMIN','MANAGER','MECHANIC')" th:unless="${o.status().closed}">
-                <form th:action="@{/service-orders/{id}/advance(id=${o.id()})}" method="post">
-                  <button class="btn link" type="submit">Avançar status</button>
-                </form>
-                <form th:action="@{/service-orders/{id}/cancel(id=${o.id()})}" method="post"
-                      th:attr="data-confirm='Tem certeza que deseja cancelar a OS ' + ${o.orderNumber()} + '?'">
-                  <button class="btn link danger" type="submit">Cancelar OS</button>
-                </form>
-              </th:block>
+
+    <div class="card">
+        <div class="table-toolbar">
+            <div class="search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="search" placeholder="Buscar por número, cliente ou veículo..." data-search-table="service-orders">
             </div>
-          </td>
-        </tr>
-        <tr th:if="${#lists.isEmpty(orders)}">
-          <td class="empty" colspan="7">
-            <span sec:authorize="hasRole('MECHANIC')">Nenhuma ordem de serviço atribuída a você</span>
-            <span sec:authorize="!hasRole('MECHANIC')">Nenhuma ordem de serviço cadastrada</span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+            <select class="filter-select" data-filter-table="service-orders">
+                <option value="">Todos os status</option>
+                <option value="CRIADA">Criada</option>
+                <option value="EM_DIAGNOSTICO">Em diagnóstico</option>
+                <option value="AGUARDANDO_APROVACAO">Aguardando aprovação</option>
+                <option value="APROVADA">Aprovada</option>
+                <option value="EM_EXECUCAO">Em execução</option>
+                <option value="FINALIZADA">Finalizada</option>
+                <option value="CANCELADA">Cancelada</option>
+            </select>
+        </div>
+
+        <div class="table-wrap">
+            <table data-table="service-orders">
+                <thead>
+                <tr><th>Número</th><th>Cliente</th><th>Veículo</th><th>Mecânico</th><th>Status</th><th class="num">Valor</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="o : ${orders}" th:attr="data-filter=${o.status().name()}">
+                    <td class="mono strong" th:text="${o.orderNumber()}">OS2026000001</td>
+                    <td th:text="${o.clientName()}">Cliente</td>
+                    <td th:text="${o.vehicleInfo()}">Veículo</td>
+                    <td th:text="${@fmt.dash(o.mechanicName())}">—</td>
+                    <td><span class="badge" th:classappend="${@fmt.orderTone(o.status())}"
+                              th:text="${o.status().label}">Criada</span></td>
+                    <td class="num mono" th:text="${@fmt.currency(o.totalAmount())}">R$ 0,00</td>
+                    <td>
+                        <div class="row-menu">
+                            <button type="button" class="menu-btn" aria-label="Ações">⋮</button>
+                            <div class="menu-dropdown">
+                                <a th:href="@{/service-orders/{id}/billing(id=${o.id()})}">Faturamento</a>
+                                <th:block sec:authorize="hasAnyRole('ADMIN','MANAGER','MECHANIC')" th:unless="${o.status().closed}">
+                                    <form th:action="@{/service-orders/{id}/advance(id=${o.id()})}" method="post">
+                                        <button type="submit">Avançar status</button>
+                                    </form>
+                                    <form th:action="@{/service-orders/{id}/cancel(id=${o.id()})}" method="post"
+                                          th:attr="data-confirm='Tem certeza que deseja cancelar a OS ' + ${o.orderNumber()} + '?'">
+                                        <button type="submit" class="danger">Cancelar OS</button>
+                                    </form>
+                                </th:block>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(orders)}">
+                    <td class="empty" colspan="7">
+                        <span sec:authorize="hasRole('MECHANIC')">Nenhuma ordem de serviço atribuída a você</span>
+                        <span sec:authorize="!hasRole('MECHANIC')">Nenhuma ordem de serviço cadastrada</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </main>
 </body>
 </html>

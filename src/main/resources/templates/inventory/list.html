@@ -1,44 +1,73 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       th:replace="~{layout :: layout('Estoque', ~{::main})}">
 <body>
 <main>
-  <div class="page-header">
-    <div>
-      <h1>Estoque</h1>
-      <p>Controle de peças e movimentações</p>
+    <div class="page-header">
+        <div>
+            <h1>Estoque</h1>
+            <p>Controle de peças e movimentações</p>
+        </div>
+        <a class="btn" th:href="@{/inventory/new}" sec:authorize="hasAnyRole('ADMIN','MANAGER')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Nova Peça
+        </a>
     </div>
-    <a class="btn" th:href="@{/inventory/new}">+ Nova Peça</a>
-  </div>
-  <div class="card table-wrap">
-    <table>
-      <thead>
-        <tr><th>Código</th><th>Nome</th><th>Fabricante</th><th class="num">Estoque</th><th class="num">Preço de venda</th><th>Status</th><th></th></tr>
-      </thead>
-      <tbody>
-        <tr th:each="p : ${parts}">
-          <td class="mono strong" th:text="${p.code()}">COD</td>
-          <td class="strong" th:text="${p.name()}">Peça</td>
-          <td th:text="${@fmt.dash(p.manufacturer())}">—</td>
-          <td class="num mono" th:text="${p.stockQuantity()}">0</td>
-          <td class="num mono" th:text="${@fmt.currency(p.salePrice())}">R$ 0,00</td>
-          <td><span class="badge" th:classappend="${p.lowStock()} ? 'rust' : 'moss'" th:text="${p.lowStock()} ? 'Estoque baixo' : 'Em estoque'">Em estoque</span></td>
-          <td>
-            <div class="actions">
-              <a class="btn link" th:href="@{/inventory/{id}/edit(id=${p.id()})}">Editar</a>
-              <a class="btn link" th:href="@{/inventory/{id}/stock(id=${p.id()},kind='ENTRADA')}">Entrada</a>
-              <a class="btn link" th:href="@{/inventory/{id}/stock(id=${p.id()},kind='SAIDA')}">Saída</a>
-              <form th:action="@{/inventory/{id}/delete(id=${p.id()})}" method="post"
-                    th:attr="data-confirm='Tem certeza que deseja excluir ' + ${p.name()} + '?'">
-                <button class="btn link danger" type="submit">Excluir</button>
-              </form>
+
+    <div class="card">
+        <div class="table-toolbar">
+            <div class="search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="search" placeholder="Buscar por código, nome ou fabricante..." data-search-table="inventory">
             </div>
-          </td>
-        </tr>
-        <tr th:if="${#lists.isEmpty(parts)}"><td class="empty" colspan="7">Nenhuma peça cadastrada</td></tr>
-      </tbody>
-    </table>
-  </div>
+            <select class="filter-select" data-filter-table="inventory">
+                <option value="">Todos os itens</option>
+                <option value="low">Estoque baixo</option>
+                <option value="ok">Em estoque</option>
+            </select>
+        </div>
+
+        <div class="table-wrap">
+            <table data-table="inventory">
+                <thead>
+                <tr><th>Código</th><th>Nome</th><th>Fabricante</th><th class="num">Estoque</th><th class="num">Preço de venda</th><th>Status</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${parts}" th:attr="data-filter=${p.lowStock() ? 'low' : 'ok'}">
+                    <td class="mono strong" th:text="${p.code()}">COD</td>
+                    <td class="strong" th:text="${p.name()}">Peça</td>
+                    <td th:text="${@fmt.dash(p.manufacturer())}">—</td>
+                    <td class="num mono" th:text="${p.stockQuantity()}">0</td>
+                    <td class="num mono" th:text="${@fmt.currency(p.salePrice())}">R$ 0,00</td>
+                    <td><span class="badge" th:classappend="${p.lowStock()} ? 'rust' : 'moss'"
+                              th:text="${p.lowStock()} ? 'Estoque baixo' : 'Em estoque'">Em estoque</span></td>
+                    <td>
+                        <div class="row-menu" sec:authorize="hasAnyRole('ADMIN','MANAGER')">
+                            <button type="button" class="menu-btn" aria-label="Ações">⋮</button>
+                            <div class="menu-dropdown">
+                                <a th:href="@{/inventory/{id}/edit(id=${p.id()})}">Editar</a>
+                                <a th:href="@{/inventory/{id}/stock(id=${p.id()},kind='ENTRADA')}">Entrada</a>
+                                <a th:href="@{/inventory/{id}/stock(id=${p.id()},kind='SAIDA')}">Saída</a>
+                                <form th:action="@{/inventory/{id}/delete(id=${p.id()})}" method="post"
+                                      th:attr="data-confirm='Tem certeza que deseja excluir ' + ${p.name()} + '?'">
+                                    <button type="submit" class="danger">Excluir</button>
+                                </form>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(parts)}">
+                    <td class="empty" colspan="7">Nenhuma peça cadastrada</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </main>
 </body>
 </html>

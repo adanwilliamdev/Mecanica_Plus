@@ -4,41 +4,69 @@
       th:replace="~{layout :: layout('Mecânicos', ~{::main})}">
 <body>
 <main>
-  <div class="page-header">
-    <div>
-      <h1>Mecânicos</h1>
-      <p>Gerencie a equipe de mecânicos da oficina</p>
+    <div class="page-header">
+        <div>
+            <h1>Mecânicos</h1>
+            <p>Gerencie a equipe de mecânicos da oficina</p>
+        </div>
+        <a class="btn" th:href="@{/mechanics/new}" sec:authorize="hasAnyRole('ADMIN','MANAGER')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Novo Mecânico
+        </a>
     </div>
-    <a class="btn" th:href="@{/mechanics/new}" sec:authorize="hasAnyRole('ADMIN','MANAGER')">+ Novo Mecânico</a>
-  </div>
-  <div class="card table-wrap">
-    <table>
-      <thead>
-        <tr><th>Nome</th><th>Especialidade</th><th>Telefone</th><th>Disponibilidade</th><th></th></tr>
-      </thead>
-      <tbody>
-        <tr th:each="m : ${mechanics}">
-          <td class="strong" th:text="${m.name()}">Nome</td>
-          <td th:text="${@fmt.dash(m.specialty())}">—</td>
-          <td th:text="${@fmt.phone(m.phone())}">—</td>
-          <td><span class="badge" th:classappend="${m.available()} ? 'moss' : 'neutral'" th:text="${m.available()} ? 'Disponível' : 'Indisponível'">Disponível</span></td>
-          <td>
-            <div class="actions" sec:authorize="hasAnyRole('ADMIN','MANAGER')">
-              <a class="btn link" th:href="@{/mechanics/{id}/edit(id=${m.id()})}">Editar</a>
-              <form th:action="@{/mechanics/{id}/availability(id=${m.id()})}" method="post">
-                <button class="btn link" type="submit">Alternar disponibilidade</button>
-              </form>
-              <form th:action="@{/mechanics/{id}/delete(id=${m.id()})}" method="post"
-                    th:attr="data-confirm='Tem certeza que deseja excluir ' + ${m.name()} + '?'">
-                <button class="btn link danger" type="submit">Excluir</button>
-              </form>
+
+    <div class="card">
+        <div class="table-toolbar">
+            <div class="search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="search" placeholder="Buscar por nome ou especialidade..." data-search-table="mechanics">
             </div>
-          </td>
-        </tr>
-        <tr th:if="${#lists.isEmpty(mechanics)}"><td class="empty" colspan="5">Nenhum mecânico cadastrado</td></tr>
-      </tbody>
-    </table>
-  </div>
+            <select class="filter-select" data-filter-table="mechanics">
+                <option value="">Todos</option>
+                <option value="available">Disponíveis</option>
+                <option value="unavailable">Indisponíveis</option>
+            </select>
+        </div>
+
+        <div class="table-wrap">
+            <table data-table="mechanics">
+                <thead>
+                <tr><th>Nome</th><th>Especialidade</th><th>Telefone</th><th>Disponibilidade</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="m : ${mechanics}" th:attr="data-filter=${m.available() ? 'available' : 'unavailable'}">
+                    <td class="strong" th:text="${m.name()}">Nome</td>
+                    <td th:text="${@fmt.dash(m.specialty())}">—</td>
+                    <td th:text="${@fmt.phone(m.phone())}">—</td>
+                    <td><span class="badge" th:classappend="${m.available()} ? 'moss' : 'neutral'"
+                              th:text="${m.available()} ? 'Disponível' : 'Indisponível'">Disponível</span></td>
+                    <td>
+                        <div class="row-menu" sec:authorize="hasAnyRole('ADMIN','MANAGER')">
+                            <button type="button" class="menu-btn" aria-label="Ações">⋮</button>
+                            <div class="menu-dropdown">
+                                <a th:href="@{/mechanics/{id}/edit(id=${m.id()})}">Editar</a>
+                                <form th:action="@{/mechanics/{id}/availability(id=${m.id()})}" method="post">
+                                    <button type="submit">Alternar disponibilidade</button>
+                                </form>
+                                <form th:action="@{/mechanics/{id}/delete(id=${m.id()})}" method="post"
+                                      th:attr="data-confirm='Tem certeza que deseja excluir ' + ${m.name()} + '?'">
+                                    <button type="submit" class="danger">Excluir</button>
+                                </form>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(mechanics)}">
+                    <td class="empty" colspan="5">Nenhum mecânico cadastrado</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </main>
 </body>
 </html>

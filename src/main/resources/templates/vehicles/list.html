@@ -4,37 +4,65 @@
       th:replace="~{layout :: layout('Veículos', ~{::main})}">
 <body>
 <main>
-  <div class="page-header">
-    <div>
-      <h1>Veículos</h1>
-      <p>Gerencie os veículos da oficina</p>
+    <div class="page-header">
+        <div>
+            <h1>Veículos</h1>
+            <p>Gerencie os veículos da oficina</p>
+        </div>
+        <a class="btn" th:href="@{/vehicles/new}" sec:authorize="hasAnyRole('ADMIN','RECEPTIONIST')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Novo Veículo
+        </a>
     </div>
-    <a class="btn" th:href="@{/vehicles/new}" sec:authorize="hasAnyRole('ADMIN','RECEPTIONIST')">+ Novo Veículo</a>
-  </div>
-  <div class="card table-wrap">
-    <table>
-      <thead>
-        <tr><th>Placa</th><th>Marca</th><th>Modelo</th><th>Ano</th><th>Quilometragem</th><th>Cliente</th><th>Status</th><th></th></tr>
-      </thead>
-      <tbody>
-        <tr th:each="v : ${vehicles}">
-          <td class="mono strong" th:text="${v.plate()}">ABC1D23</td>
-          <td th:text="${v.brand()}">Marca</td>
-          <td th:text="${v.model()}">Modelo</td>
-          <td th:text="${v.year()}">2020</td>
-          <td th:text="${@fmt.km(v.mileage())}">—</td>
-          <td th:text="${v.clientName()}">Cliente</td>
-          <td><span class="badge" th:classappend="${v.active()} ? 'moss' : 'neutral'" th:text="${v.active()} ? 'Ativo' : 'Inativo'">Ativo</span></td>
-          <td>
-            <div class="actions" sec:authorize="hasAnyRole('ADMIN','RECEPTIONIST')">
-              <a class="btn link" th:href="@{/vehicles/{id}/edit(id=${v.id()})}">Editar</a>
+
+    <div class="card">
+        <div class="table-toolbar">
+            <div class="search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="search" placeholder="Buscar por placa, marca ou cliente..." data-search-table="vehicles">
             </div>
-          </td>
-        </tr>
-        <tr th:if="${#lists.isEmpty(vehicles)}"><td class="empty" colspan="8">Nenhum veículo cadastrado</td></tr>
-      </tbody>
-    </table>
-  </div>
+            <select class="filter-select" data-filter-table="vehicles">
+                <option value="">Todos os status</option>
+                <option value="active">Ativos</option>
+                <option value="inactive">Inativos</option>
+            </select>
+        </div>
+
+        <div class="table-wrap">
+            <table data-table="vehicles">
+                <thead>
+                <tr><th>Placa</th><th>Marca</th><th>Modelo</th><th>Ano</th><th>Quilometragem</th><th>Cliente</th><th>Status</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="v : ${vehicles}" th:attr="data-filter=${v.active() ? 'active' : 'inactive'}">
+                    <td class="mono strong" th:text="${v.plate()}">ABC1D23</td>
+                    <td th:text="${v.brand()}">Marca</td>
+                    <td th:text="${v.model()}">Modelo</td>
+                    <td th:text="${v.year()}">2020</td>
+                    <td th:text="${@fmt.km(v.mileage())}">—</td>
+                    <td th:text="${v.clientName()}">Cliente</td>
+                    <td><span class="badge" th:classappend="${v.active()} ? 'moss' : 'neutral'"
+                              th:text="${v.active()} ? 'Ativo' : 'Inativo'">Ativo</span></td>
+                    <td>
+                        <div class="row-menu" sec:authorize="hasAnyRole('ADMIN','RECEPTIONIST')">
+                            <button type="button" class="menu-btn" aria-label="Ações">⋮</button>
+                            <div class="menu-dropdown">
+                                <a th:href="@{/vehicles/{id}/edit(id=${v.id()})}">Editar</a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(vehicles)}">
+                    <td class="empty" colspan="8">Nenhum veículo cadastrado</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </main>
 </body>
 </html>

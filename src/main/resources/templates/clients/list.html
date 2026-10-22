@@ -4,43 +4,71 @@
       th:replace="~{layout :: layout('Clientes', ~{::main})}">
 <body>
 <main>
-  <div class="page-header">
-    <div>
-      <h1>Clientes</h1>
-      <p>Gerencie todos os clientes da oficina</p>
+    <div class="page-header">
+        <div>
+            <h1>Clientes</h1>
+            <p>Gerencie todos os clientes da oficina</p>
+        </div>
+        <a class="btn" th:href="@{/clients/new}" sec:authorize="hasAnyRole('ADMIN','RECEPTIONIST')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Novo Cliente
+        </a>
     </div>
-    <a class="btn" th:href="@{/clients/new}" sec:authorize="hasAnyRole('ADMIN','RECEPTIONIST')">+ Novo Cliente</a>
-  </div>
-  <div class="card table-wrap">
-    <table>
-      <thead>
-        <tr><th>Nome</th><th>CPF</th><th>Telefone</th><th>Email</th><th>Veículos</th><th>Status</th><th></th></tr>
-      </thead>
-      <tbody>
-        <tr th:each="c : ${clients}">
-          <td class="strong" th:text="${c.name()}">Nome</td>
-          <td th:text="${@fmt.cpf(c.cpf())}">—</td>
-          <td th:text="${@fmt.phone(c.phone())}">—</td>
-          <td th:text="${@fmt.dash(c.email())}">—</td>
-          <td th:text="${c.vehicleCount()}">0</td>
-          <td><span class="badge" th:classappend="${c.active()} ? 'moss' : 'neutral'" th:text="${c.active()} ? 'Ativo' : 'Inativo'">Ativo</span></td>
-          <td>
-            <div class="actions" sec:authorize="hasAnyRole('ADMIN','RECEPTIONIST')">
-              <a class="btn link" th:href="@{/clients/{id}/edit(id=${c.id()})}">Editar</a>
-              <form th:action="@{/clients/{id}/activate(id=${c.id()})}" method="post" th:unless="${c.active()}">
-                <button class="btn link" type="submit">Ativar</button>
-              </form>
-              <form th:action="@{/clients/{id}/delete(id=${c.id()})}" method="post"
-                    th:attr="data-confirm='Tem certeza que deseja excluir ' + ${c.name()} + '? O cliente ficará inativo e poderá ser reativado depois.'">
-                <button class="btn link danger" type="submit">Excluir</button>
-              </form>
+
+    <div class="card">
+        <div class="table-toolbar">
+            <div class="search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="search" placeholder="Buscar por nome, CPF ou email..." data-search-table="clients">
             </div>
-          </td>
-        </tr>
-        <tr th:if="${#lists.isEmpty(clients)}"><td class="empty" colspan="7">Nenhum cliente cadastrado</td></tr>
-      </tbody>
-    </table>
-  </div>
+            <select class="filter-select" data-filter-table="clients">
+                <option value="">Todos os status</option>
+                <option value="active">Ativos</option>
+                <option value="inactive">Inativos</option>
+            </select>
+        </div>
+
+        <div class="table-wrap">
+            <table data-table="clients">
+                <thead>
+                <tr><th>Nome</th><th>CPF</th><th>Telefone</th><th>Email</th><th>Veículos</th><th>Status</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="c : ${clients}" th:attr="data-filter=${c.active() ? 'active' : 'inactive'}">
+                    <td class="strong" th:text="${c.name()}">Nome</td>
+                    <td th:text="${@fmt.cpf(c.cpf())}">—</td>
+                    <td th:text="${@fmt.phone(c.phone())}">—</td>
+                    <td th:text="${@fmt.dash(c.email())}">—</td>
+                    <td th:text="${c.vehicleCount()}">0</td>
+                    <td><span class="badge" th:classappend="${c.active()} ? 'moss' : 'neutral'"
+                              th:text="${c.active()} ? 'Ativo' : 'Inativo'">Ativo</span></td>
+                    <td>
+                        <div class="row-menu" sec:authorize="hasAnyRole('ADMIN','RECEPTIONIST')">
+                            <button type="button" class="menu-btn" aria-label="Ações">⋮</button>
+                            <div class="menu-dropdown">
+                                <a th:href="@{/clients/{id}/edit(id=${c.id()})}">Editar</a>
+                                <form th:action="@{/clients/{id}/activate(id=${c.id()})}" method="post" th:unless="${c.active()}">
+                                    <button type="submit">Ativar</button>
+                                </form>
+                                <form th:action="@{/clients/{id}/delete(id=${c.id()})}" method="post"
+                                      th:attr="data-confirm='Tem certeza que deseja excluir ' + ${c.name()} + '? O cliente ficará inativo e poderá ser reativado depois.'">
+                                    <button type="submit" class="danger">Excluir</button>
+                                </form>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(clients)}">
+                    <td class="empty" colspan="7">Nenhum cliente cadastrado</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </main>
 </body>
 </html>
