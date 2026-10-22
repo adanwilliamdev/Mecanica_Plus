@@ -11,10 +11,10 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.mecanicaplus</groupId>
-    <artifactId>mecanica-plus</artifactId>
+    <groupId>com.torquegestao</groupId>
+    <artifactId>torque-gestao</artifactId>
     <version>3.0.0</version>
-    <name>Mecânica+</name>
+    <name>Torque Gestão</name>
     <description>Sistema de gestão para oficinas mecânicas</description>
 
     <properties>

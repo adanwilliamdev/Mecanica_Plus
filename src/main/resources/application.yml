@@ -4,7 +4,7 @@ server:
 
 spring:
   application:
-    name: mecanica-plus
+    name: torque-gestao
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/mecanica}
     username: ${DB_USER:postgres}
@@ -58,4 +58,4 @@ app:
 
 logging:
   level:
-    com.mecanicaplus: INFO
+    com.torquegestao: INFO

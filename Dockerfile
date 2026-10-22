@@ -10,7 +10,8 @@ RUN mvn -q -B -DskipTests package
 FROM eclipse-temurin:21-jre
 RUN useradd --system --uid 1001 mecanica
 WORKDIR /app
-COPY --from=build /workspace/target/mecanica-plus-*.jar app.jar
+# Usando o curinga *.jar para pegar o torque-gestao-3.0.0.jar ou qualquer outro nome que o Maven gerar
+COPY --from=build /workspace/target/*.jar app.jar
 USER mecanica
 EXPOSE 8080
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75"
