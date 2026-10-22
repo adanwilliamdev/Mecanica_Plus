@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(${editingId != null ? 'Editar mecânico' : 'Novo mecânico'}, ~{::main})}">
+<body>
+<main>
+  <div class="page-header">
+    <div><h1 th:text="${editingId != null} ? 'Editar mecânico' : 'Novo mecânico'">Novo mecânico</h1></div>
+  </div>
+  <form class="card form-card" method="post" th:object="${form}"
+        th:action="${editingId != null} ? @{/mechanics/{id}(id=${editingId})} : @{/mechanics}">
+    <div class="alert error" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
+    <div class="field">
+      <label for="name">Nome *</label>
+      <input id="name" type="text" th:field="*{name}">
+      <span class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+    </div>
+    <div class="field">
+      <label for="specialty">Especialidade</label>
+      <input id="specialty" type="text" th:field="*{specialty}" placeholder="Motor, Suspensão, Elétrica...">
+    </div>
+    <div class="field">
+      <label for="phone">Telefone</label>
+      <input id="phone" type="text" th:field="*{phone}" placeholder="11999999999">
+    </div>
+    <div class="form-actions">
+      <a class="btn secondary" th:href="@{/mechanics}">Cancelar</a>
+      <button class="btn" type="submit" th:text="${editingId != null} ? 'Atualizar' : 'Criar'">Criar</button>
+    </div>
+  </form>
+</main>
+</body>
+</html>

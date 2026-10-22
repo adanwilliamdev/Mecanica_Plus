@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout('Novo orçamento', ~{::main})}">
+<body>
+<main>
+  <div class="page-header">
+    <div><h1>Novo orçamento</h1></div>
+  </div>
+  <form class="card form-card" method="post" th:object="${form}" th:action="@{/budgets}">
+    <div class="alert error" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
+    <div class="field">
+      <label for="clientId">Cliente *</label>
+      <select id="clientId" th:field="*{clientId}">
+        <option value="">Selecione um cliente</option>
+        <option th:each="c : ${clients}" th:value="${c.id()}" th:text="${c.name()}">Cliente</option>
+      </select>
+      <span class="field-error" th:if="${#fields.hasErrors('clientId')}" th:errors="*{clientId}"></span>
+    </div>
+    <div class="field">
+      <label for="vehicleId">Veículo *</label>
+      <select id="vehicleId" th:field="*{vehicleId}" data-vehicle-select>
+        <option value="">Selecione um veículo</option>
+        <option th:each="v : ${vehicles}" th:value="${v.id()}" th:attr="data-client=${v.clientId()}"
+                th:text="${v.brand() + ' ' + v.model() + ' (' + v.plate() + ')'}">Veículo</option>
+      </select>
+      <div class="hint">Selecione primeiro o cliente para listar os veículos dele.</div>
+      <span class="field-error" th:if="${#fields.hasErrors('vehicleId')}" th:errors="*{vehicleId}"></span>
+    </div>
+    <div class="field">
+      <label for="description">Descrição</label>
+      <textarea id="description" rows="3" th:field="*{description}" placeholder="Serviços e peças previstos"></textarea>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="totalAmount">Valor total *</label>
+        <input id="totalAmount" type="number" step="0.01" min="0" th:field="*{totalAmount}">
+        <span class="field-error" th:if="${#fields.hasErrors('totalAmount')}" th:errors="*{totalAmount}"></span>
+      </div>
+      <div class="field">
+        <label for="validUntil">Válido até</label>
+        <input id="validUntil" type="date" th:field="*{validUntil}">
+        <span class="field-error" th:if="${#fields.hasErrors('validUntil')}" th:errors="*{validUntil}"></span>
+      </div>
+    </div>
+    <div class="form-actions">
+      <a class="btn secondary" th:href="@{/budgets}">Cancelar</a>
+      <button class="btn" type="submit">Criar</button>
+    </div>
+  </form>
+</main>
+</body>
+</html>

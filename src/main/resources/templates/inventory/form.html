@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(${editingId != null ? 'Editar peça' : 'Nova peça'}, ~{::main})}">
+<body>
+<main>
+  <div class="page-header">
+    <div><h1 th:text="${editingId != null} ? 'Editar peça' : 'Nova peça'">Nova peça</h1></div>
+  </div>
+  <form class="card form-card" method="post" th:object="${form}"
+        th:action="${editingId != null} ? @{/inventory/{id}(id=${editingId})} : @{/inventory}">
+    <div class="alert error" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
+    <div class="field">
+      <label for="name">Nome *</label>
+      <input id="name" type="text" th:field="*{name}">
+      <span class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="code">Código *</label>
+        <input id="code" type="text" th:field="*{code}">
+        <span class="field-error" th:if="${#fields.hasErrors('code')}" th:errors="*{code}"></span>
+      </div>
+      <div class="field">
+        <label for="manufacturer">Fabricante</label>
+        <input id="manufacturer" type="text" th:field="*{manufacturer}">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="purchasePrice">Preço de compra *</label>
+        <input id="purchasePrice" type="number" step="0.01" min="0" th:field="*{purchasePrice}">
+        <span class="field-error" th:if="${#fields.hasErrors('purchasePrice')}" th:errors="*{purchasePrice}"></span>
+      </div>
+      <div class="field">
+        <label for="salePrice">Preço de venda *</label>
+        <input id="salePrice" type="number" step="0.01" min="0" th:field="*{salePrice}">
+        <span class="field-error" th:if="${#fields.hasErrors('salePrice')}" th:errors="*{salePrice}"></span>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="stockQuantity" th:text="${editingId != null} ? 'Em estoque' : 'Quantidade inicial *'">Quantidade inicial *</label>
+        <input id="stockQuantity" type="number" min="0" th:field="*{stockQuantity}" th:readonly="${editingId != null}">
+        <div class="hint" th:if="${editingId != null}">O saldo só muda por entradas e saídas de estoque.</div>
+        <span class="field-error" th:if="${#fields.hasErrors('stockQuantity')}" th:errors="*{stockQuantity}"></span>
+      </div>
+      <div class="field">
+        <label for="minimumStock">Estoque mínimo</label>
+        <input id="minimumStock" type="number" min="1" th:field="*{minimumStock}">
+        <span class="field-error" th:if="${#fields.hasErrors('minimumStock')}" th:errors="*{minimumStock}"></span>
+      </div>
+    </div>
+    <div class="form-actions">
+      <a class="btn secondary" th:href="@{/inventory}">Cancelar</a>
+      <button class="btn" type="submit" th:text="${editingId != null} ? 'Atualizar' : 'Criar'">Criar</button>
+    </div>
+  </form>
+</main>
+</body>
+</html>

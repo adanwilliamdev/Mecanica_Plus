@@ -1,0 +1,14 @@
+spring:
+  data:
+    redis:
+      connect-timeout: 200ms
+      timeout: 200ms
+  thymeleaf:
+    cache: false
+app:
+  environment: test
+  jwt:
+    secret: segredo-de-teste-com-mais-de-32-caracteres-ok
+  login-rate-limit-attempts: 5
+  seed:
+    enabled: false

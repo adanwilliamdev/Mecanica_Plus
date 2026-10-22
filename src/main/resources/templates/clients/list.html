@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout('Clientes', ~{::main})}">
+<body>
+<main>
+  <div class="page-header">
+    <div>
+      <h1>Clientes</h1>
+      <p>Gerencie todos os clientes da oficina</p>
+    </div>
+    <a class="btn" th:href="@{/clients/new}" sec:authorize="hasAnyRole('ADMIN','RECEPTIONIST')">+ Novo Cliente</a>
+  </div>
+  <div class="card table-wrap">
+    <table>
+      <thead>
+        <tr><th>Nome</th><th>CPF</th><th>Telefone</th><th>Email</th><th>Veículos</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        <tr th:each="c : ${clients}">
+          <td class="strong" th:text="${c.name()}">Nome</td>
+          <td th:text="${@fmt.cpf(c.cpf())}">—</td>
+          <td th:text="${@fmt.phone(c.phone())}">—</td>
+          <td th:text="${@fmt.dash(c.email())}">—</td>
+          <td th:text="${c.vehicleCount()}">0</td>
+          <td><span class="badge" th:classappend="${c.active()} ? 'moss' : 'neutral'" th:text="${c.active()} ? 'Ativo' : 'Inativo'">Ativo</span></td>
+          <td>
+            <div class="actions" sec:authorize="hasAnyRole('ADMIN','RECEPTIONIST')">
+              <a class="btn link" th:href="@{/clients/{id}/edit(id=${c.id()})}">Editar</a>
+              <form th:action="@{/clients/{id}/activate(id=${c.id()})}" method="post" th:unless="${c.active()}">
+                <button class="btn link" type="submit">Ativar</button>
+              </form>
+              <form th:action="@{/clients/{id}/delete(id=${c.id()})}" method="post"
+                    th:attr="data-confirm='Tem certeza que deseja excluir ' + ${c.name()} + '? O cliente ficará inativo e poderá ser reativado depois.'">
+                <button class="btn link danger" type="submit">Excluir</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(clients)}"><td class="empty" colspan="7">Nenhum cliente cadastrado</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+</body>
+</html>

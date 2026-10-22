@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout('Orçamentos', ~{::main})}">
+<body>
+<main>
+  <div class="page-header">
+    <div>
+      <h1>Orçamentos</h1>
+      <p>Acompanhe e aprove os orçamentos da oficina</p>
+    </div>
+    <a class="btn" th:href="@{/budgets/new}" sec:authorize="hasAnyRole('ADMIN','RECEPTIONIST')">+ Novo Orçamento</a>
+  </div>
+  <div class="card table-wrap">
+    <table>
+      <thead>
+        <tr><th>Número</th><th>Cliente</th><th>Veículo</th><th class="num">Valor</th><th>Validade</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        <tr th:each="b : ${budgets}">
+          <td class="mono strong" th:text="${b.budgetNumber()}">BUD2026000001</td>
+          <td th:text="${b.clientName()}">Cliente</td>
+          <td th:text="${b.vehicleInfo()}">Veículo</td>
+          <td class="num mono" th:text="${@fmt.currency(b.totalAmount())}">R$ 0,00</td>
+          <td th:text="${@fmt.date(b.validUntil())}">—</td>
+          <td><span class="badge" th:classappend="${@fmt.budgetTone(b.status())}" th:text="${b.status().label}">Pendente</span></td>
+          <td>
+            <div class="actions" sec:authorize="hasAnyRole('ADMIN','MANAGER')" th:if="${b.status().name() == 'PENDENTE'}">
+              <form th:action="@{/budgets/{id}/approve(id=${b.id()})}" method="post">
+                <button class="btn link" type="submit">Aprovar</button>
+              </form>
+              <form th:action="@{/budgets/{id}/reject(id=${b.id()})}" method="post"
+                    th:attr="data-confirm='Recusar o orçamento ' + ${b.budgetNumber()} + '?'">
+                <button class="btn link danger" type="submit">Recusar</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(budgets)}"><td class="empty" colspan="7">Nenhum orçamento cadastrado</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout('Nova ordem de serviço', ~{::main})}">
+<body>
+<main>
+  <div class="page-header">
+    <div><h1>Nova ordem de serviço</h1></div>
+  </div>
+  <form class="card form-card" method="post" th:object="${form}" th:action="@{/service-orders}">
+    <div class="alert error" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
+    <div class="field">
+      <label for="clientId">Cliente *</label>
+      <select id="clientId" th:field="*{clientId}">
+        <option value="">Selecione um cliente</option>
+        <option th:each="c : ${clients}" th:value="${c.id()}" th:text="${c.name()}">Cliente</option>
+      </select>
+      <span class="field-error" th:if="${#fields.hasErrors('clientId')}" th:errors="*{clientId}"></span>
+    </div>
+    <div class="field">
+      <label for="vehicleId">Veículo *</label>
+      <select id="vehicleId" th:field="*{vehicleId}" data-vehicle-select>
+        <option value="">Selecione um veículo</option>
+        <option th:each="v : ${vehicles}" th:value="${v.id()}" th:attr="data-client=${v.clientId()}"
+                th:text="${v.brand() + ' ' + v.model() + ' (' + v.plate() + ')'}">Veículo</option>
+      </select>
+      <div class="hint">Selecione primeiro o cliente para listar os veículos dele.</div>
+      <span class="field-error" th:if="${#fields.hasErrors('vehicleId')}" th:errors="*{vehicleId}"></span>
+    </div>
+    <div class="field">
+      <label for="mechanicId">Mecânico</label>
+      <select id="mechanicId" th:field="*{mechanicId}">
+        <option value="">Sem mecânico atribuído</option>
+        <option th:each="m : ${mechanics}" th:value="${m.id()}"
+                th:text="${m.name() + (m.specialty() != null ? ' · ' + m.specialty() : '')}">Mecânico</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="reportedProblem">Problema relatado</label>
+      <textarea id="reportedProblem" rows="3" th:field="*{reportedProblem}" placeholder="Descreva o problema relatado pelo cliente"></textarea>
+    </div>
+    <div class="form-actions">
+      <a class="btn secondary" th:href="@{/service-orders}">Cancelar</a>
+      <button class="btn" type="submit">Criar</button>
+    </div>
+  </form>
+</main>
+</body>
+</html>

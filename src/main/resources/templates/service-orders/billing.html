@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout('Faturamento', ~{::main})}">
+<body>
+<main class="space">
+  <div class="page-header">
+    <div>
+      <h1>Faturamento · <span class="mono" th:text="${order.orderNumber()}">OS</span></h1>
+      <p><span th:text="${order.clientName()}">Cliente</span> · <span th:text="${order.vehicleInfo()}">Veículo</span>
+        · <span class="badge" th:classappend="${@fmt.orderTone(order.status())}" th:text="${order.status().label}">Criada</span></p>
+    </div>
+    <a class="btn secondary" th:href="@{/service-orders}">Voltar</a>
+  </div>
+
+  <div class="totals">
+    <div class="card box"><span class="muted">Mão de obra</span><b th:text="${@fmt.currency(order.laborAmount())}">R$ 0,00</b></div>
+    <div class="card box"><span class="muted">Peças</span><b th:text="${@fmt.currency(order.partsAmount())}">R$ 0,00</b></div>
+    <div class="box total"><span>Total</span><b th:text="${@fmt.currency(order.totalAmount())}">R$ 0,00</b></div>
+  </div>
+
+  <div class="alert warn" th:if="${order.status().closed}">
+    Esta OS está encerrada: peças e mão de obra não podem mais ser alteradas.
+  </div>
+
+  <div class="card pad">
+    <h3 class="section-title">Peças utilizadas</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Código</th><th>Peça</th><th class="num">Qtd.</th><th class="num">Valor unit.</th><th class="num">Subtotal</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr th:each="i : ${order.items()}">
+            <td class="mono" th:text="${i.partCode()}">COD</td>
+            <td class="strong" th:text="${i.partName()}">Peça</td>
+            <td class="num mono" th:text="${i.quantity()}">1</td>
+            <td class="num mono" th:text="${@fmt.currency(i.unitPrice())}">R$ 0,00</td>
+            <td class="num mono" th:text="${@fmt.currency(i.subtotal())}">R$ 0,00</td>
+            <td>
+              <div class="actions" th:unless="${order.status().closed}">
+                <form th:action="@{/service-orders/{id}/items/{itemId}/remove(id=${order.id()},itemId=${i.id()})}" method="post"
+                      data-confirm="Remover esta peça? A quantidade será devolvida ao estoque.">
+                  <button class="btn link danger" type="submit">Remover</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(order.items())}"><td class="empty" colspan="6">Nenhuma peça lançada</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid cols-2" th:unless="${order.status().closed}">
+    <form class="card pad" method="post" th:object="${itemForm}" th:action="@{/service-orders/{id}/items(id=${order.id()})}">
+      <h3 class="section-title">Adicionar peça</h3>
+      <div class="alert error" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
+      <div class="field">
+        <label for="partId">Peça</label>
+        <select id="partId" th:field="*{partId}">
+          <option value="">Selecione uma peça</option>
+          <option th:each="p : ${parts}" th:value="${p.id()}"
+                  th:text="${p.name() + ' (' + p.code() + ') · estoque ' + p.stockQuantity() + ' · ' + @fmt.currency(p.salePrice())}">Peça</option>
+        </select>
+        <span class="field-error" th:if="${#fields.hasErrors('partId')}" th:errors="*{partId}"></span>
+      </div>
+      <div class="field">
+        <label for="quantity">Quantidade</label>
+        <input id="quantity" type="number" min="1" th:field="*{quantity}">
+        <span class="field-error" th:if="${#fields.hasErrors('quantity')}" th:errors="*{quantity}"></span>
+      </div>
+      <button class="btn" type="submit">Adicionar</button>
+    </form>
+
+    <form class="card pad" method="post" th:object="${laborForm}" th:action="@{/service-orders/{id}/labor(id=${order.id()})}">
+      <h3 class="section-title">Mão de obra</h3>
+      <div class="field">
+        <label for="laborAmount">Valor (R$)</label>
+        <input id="laborAmount" type="number" step="0.01" min="0" th:field="*{laborAmount}">
+        <span class="field-error" th:if="${#fields.hasErrors('laborAmount')}" th:errors="*{laborAmount}"></span>
+      </div>
+      <button class="btn" type="submit">Salvar</button>
+    </form>
+  </div>
+</main>
+</body>
+</html>

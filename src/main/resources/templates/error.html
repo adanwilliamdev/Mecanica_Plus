@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="'Erro ' + ${status} + ' · Mecânica+'">Erro · Mecânica+</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="login">
+  <div class="panel">
+    <div class="box" style="text-align:center">
+      <p class="mono muted" th:text="${status}">500</p>
+      <h2 th:text="${status == 403} ? 'Acesso negado' : (${status == 404} ? 'Página não encontrada' : 'Algo deu errado')">Algo deu errado</h2>
+      <p class="muted" style="margin:8px 0 22px"
+         th:text="${status == 403} ? 'Você não tem permissão para acessar esta página.' : (${status == 404} ? 'O endereço acessado não existe.' : 'Não foi possível concluir a operação. Tente novamente.')">Tente novamente.</p>
+      <a class="btn" th:href="@{/}">Voltar ao início</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

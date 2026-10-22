@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout('Ordens de serviço', ~{::main})}">
+<body>
+<main>
+  <div class="page-header">
+    <div>
+      <h1>Ordens de Serviço</h1>
+      <p>Acompanhe o ciclo de atendimento da oficina</p>
+    </div>
+    <a class="btn" th:href="@{/service-orders/new}" sec:authorize="hasAnyRole('ADMIN','RECEPTIONIST')">+ Nova Ordem</a>
+  </div>
+  <div class="card table-wrap">
+    <table>
+      <thead>
+        <tr><th>Número</th><th>Cliente</th><th>Veículo</th><th>Mecânico</th><th>Status</th><th class="num">Valor</th><th></th></tr>
+      </thead>
+      <tbody>
+        <tr th:each="o : ${orders}">
+          <td class="mono strong" th:text="${o.orderNumber()}">OS2026000001</td>
+          <td th:text="${o.clientName()}">Cliente</td>
+          <td th:text="${o.vehicleInfo()}">Veículo</td>
+          <td th:text="${@fmt.dash(o.mechanicName())}">—</td>
+          <td><span class="badge" th:classappend="${@fmt.orderTone(o.status())}" th:text="${o.status().label}">Criada</span></td>
+          <td class="num mono" th:text="${@fmt.currency(o.totalAmount())}">R$ 0,00</td>
+          <td>
+            <div class="actions">
+              <a class="btn link" th:href="@{/service-orders/{id}/billing(id=${o.id()})}">Faturamento</a>
+              <th:block sec:authorize="hasAnyRole('ADMIN','MANAGER','MECHANIC')" th:unless="${o.status().closed}">
+                <form th:action="@{/service-orders/{id}/advance(id=${o.id()})}" method="post">
+                  <button class="btn link" type="submit">Avançar status</button>
+                </form>
+                <form th:action="@{/service-orders/{id}/cancel(id=${o.id()})}" method="post"
+                      th:attr="data-confirm='Tem certeza que deseja cancelar a OS ' + ${o.orderNumber()} + '?'">
+                  <button class="btn link danger" type="submit">Cancelar OS</button>
+                </form>
+              </th:block>
+            </div>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(orders)}">
+          <td class="empty" colspan="7">
+            <span sec:authorize="hasRole('MECHANIC')">Nenhuma ordem de serviço atribuída a você</span>
+            <span sec:authorize="!hasRole('MECHANIC')">Nenhuma ordem de serviço cadastrada</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+</body>
+</html>

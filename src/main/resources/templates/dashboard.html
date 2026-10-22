@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout('Dashboard', ~{::main})}">
+<body>
+<main class="space">
+  <div class="page-header">
+    <div>
+      <h1>Dashboard</h1>
+      <p>Visão geral da sua oficina</p>
+    </div>
+  </div>
+
+  <div class="grid cols-3">
+    <div class="card tile"><div><div class="val" th:text="${stats.totalClients()}">0</div><div class="lbl">Clientes</div></div></div>
+    <div class="card tile"><div><div class="val" th:text="${stats.totalVehicles()}">0</div><div class="lbl">Veículos</div></div></div>
+    <div class="card tile"><div><div class="val" th:text="${stats.openServiceOrders()}">0</div><div class="lbl">Ordens abertas</div></div></div>
+  </div>
+
+  <div class="card tile warn" th:if="${stats.lowStockItems() > 0}">
+    <div><div class="val" th:text="${stats.lowStockItems()}">0</div><div class="lbl">Itens com estoque baixo</div></div>
+  </div>
+
+  <div class="grid cols-2">
+    <div class="card pad">
+      <div class="muted" style="font-weight:500">Faturamento mensal</div>
+      <div class="big-number" th:text="${@fmt.currency(stats.monthlyRevenue())}">R$ 0,00</div>
+      <div class="chart" role="img" aria-label="Faturamento dos últimos 6 meses">
+        <div class="col" th:each="bar : ${bars}">
+          <small th:text="${@fmt.currency(bar.amount())}">R$ 0,00</small>
+          <div class="bar" th:style="'height:' + ${bar.percent()} + '%'" th:title="${bar.label() + ': ' + @fmt.currency(bar.amount())}"></div>
+          <span th:text="${bar.label()}">Jan</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="space">
+      <div class="card pad">
+        <h3 class="section-title">Mecânicos mais ativos</h3>
+        <p class="muted" th:if="${#lists.isEmpty(stats.topMechanics())}">Sem ordens finalizadas ainda.</p>
+        <ol class="rank" th:unless="${#lists.isEmpty(stats.topMechanics())}">
+          <li th:each="m, it : ${stats.topMechanics()}">
+            <span class="pos" th:text="${it.count}">1</span>
+            <span class="name" th:text="${m.mechanicName()}">Nome</span>
+            <span class="cnt" th:text="${m.completedOrders() + ' OS'}">0 OS</span>
+          </li>
+        </ol>
+      </div>
+      <div class="card pad">
+        <h3 class="section-title">Peças mais usadas</h3>
+        <p class="muted" th:if="${#lists.isEmpty(stats.mostUsedParts())}">Nenhuma peça utilizada ainda.</p>
+        <ol class="rank" th:unless="${#lists.isEmpty(stats.mostUsedParts())}">
+          <li th:each="p, it : ${stats.mostUsedParts()}">
+            <span class="pos" th:text="${it.count}">1</span>
+            <span class="name" th:text="${p.partName()}">Peça</span>
+            <span class="cnt" th:text="${p.usageCount() + ' un.'}">0 un.</span>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

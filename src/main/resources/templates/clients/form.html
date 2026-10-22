@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(${editingId != null ? 'Editar cliente' : 'Novo cliente'}, ~{::main})}">
+<body>
+<main>
+  <div class="page-header">
+    <div><h1 th:text="${editingId != null} ? 'Editar cliente' : 'Novo cliente'">Novo cliente</h1></div>
+  </div>
+  <form class="card form-card" method="post" th:object="${form}"
+        th:action="${editingId != null} ? @{/clients/{id}(id=${editingId})} : @{/clients}">
+    <div class="alert error" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
+    <div class="field">
+      <label for="name">Nome *</label>
+      <input id="name" type="text" th:field="*{name}">
+      <span class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="cpf">CPF</label>
+        <input id="cpf" type="text" th:field="*{cpf}" placeholder="12345678900">
+      </div>
+      <div class="field">
+        <label for="phone">Telefone</label>
+        <input id="phone" type="text" th:field="*{phone}" placeholder="11999999999">
+      </div>
+    </div>
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" type="email" th:field="*{email}">
+      <span class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+    </div>
+    <div class="field">
+      <label for="address">Endereço</label>
+      <input id="address" type="text" th:field="*{address}">
+    </div>
+    <div class="form-actions">
+      <a class="btn secondary" th:href="@{/clients}">Cancelar</a>
+      <button class="btn" type="submit" th:text="${editingId != null} ? 'Atualizar' : 'Criar'">Criar</button>
+    </div>
+  </form>
+</main>
+</body>
+</html>
